@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecommerce — Performance Ene-Abr YoY</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fff;--bg2:#f6f6f4;--bg3:#f0efec;--text:#1a1a1a;--text2:#6b6a66;--text3:#999896;--border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);--r:8px;--rlg:12px}
+body{font-family:system-ui,sans-serif;font-size:13px;color:var(--text);background:var(--bg3);min-height:100vh}
+.shell{max-width:1300px;margin:0 auto;padding:16px}
+.header{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rlg);padding:16px 22px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.title{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.subtitle{font-size:11px;color:var(--text2);margin-top:2px}
+.badge{font-size:11px;font-weight:500;padding:4px 10px;background:#E1F5EE;color:#0F6E56;border-radius:20px}
+.export-btn{height:30px;padding:0 14px;font-size:12px;font-weight:500;background:#1a1a1a;color:#fff;border:none;border-radius:var(--r);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.export-btn:hover{background:#333}
+.filters{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rlg);padding:12px 16px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.fg select,.fg input{font-size:12px;height:30px;padding:0 8px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text);min-width:100px;outline:none}
+.fg input{min-width:80px}
+.reset-btn{height:30px;padding:0 12px;font-size:12px;font-weight:500;background:transparent;border:0.5px solid var(--border2);border-radius:var(--r);cursor:pointer;color:var(--text2)}
+.reset-btn:hover{background:var(--bg2)}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+.mc{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rlg);padding:12px 16px}
+.mc-label{font-size:11px;color:var(--text2);margin-bottom:4px}
+.mc-val{font-size:20px;font-weight:600;letter-spacing:-.03em}
+.mc-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.pos{color:#1D9E75}.neg{color:#D85A30}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rlg);overflow:hidden;margin-bottom:10px}
+.tabs{display:flex;border-bottom:0.5px solid var(--border);padding:0 18px;overflow-x:auto}
+.tab{padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text)}.tab.active{color:var(--text);border-bottom-color:var(--text)}
+.view{display:none;padding:14px 18px}.view.active{display:block}
+.drill-panel{display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px}
+.drill-panel.active{display:block}
+.drill-bc{display:flex;align-items:center;gap:5px;padding:8px 12px;background:var(--bg2);border-radius:var(--r);margin-bottom:10px;flex-wrap:wrap}
+.drill-bc-item{font-size:12px;color:var(--text2);cursor:pointer;padding:2px 7px;border-radius:var(--r)}
+.drill-bc-item:hover{background:rgba(0,0,0,.07)}.drill-bc-item.active{color:var(--text);font-weight:500;cursor:default}
+.drill-bc-sep{font-size:11px;color:var(--text3)}
+.chart-wrap{position:relative;height:250px;margin-bottom:14px}
+.chart-wrap-pie{position:relative;height:290px;margin-bottom:14px}
+.tbl-wrap{overflow-x:auto;border:0.5px solid var(--border);border-radius:var(--r)}
+.tbl-scroll{overflow-x:auto;overflow-y:auto;max-height:400px;border:0.5px solid var(--border);border-radius:var(--r)}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;text-align:right;border-bottom:0.5px solid var(--border);background:var(--bg2);white-space:nowrap;user-select:none;position:sticky;top:0;z-index:1}
+th.sortable{cursor:pointer}th.sortable:hover{color:var(--text)}th.sort-active{color:var(--text)}
+th:first-child{text-align:left}
+td{font-size:12px;padding:7px 10px;text-align:right;border-bottom:0.5px solid var(--border);color:var(--text)}
+td:first-child{text-align:left}
+tr:last-child td{border-bottom:none}
+tr.clickable:hover td{background:#f0f4ff;cursor:pointer}
+tr.clickable:hover .da{opacity:1}
+tr.sku-row:hover td{background:#f0f4ff;cursor:pointer}
+tr.sku-row.selected td{background:#e8f0fe}
+tr.total-row td{font-weight:600;background:var(--bg2);border-top:0.5px solid var(--border2)}
+.brand-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.bar-mini{display:inline-block;height:7px;border-radius:2px;vertical-align:middle;margin-right:4px;opacity:.8}
+.sort-icon{font-size:9px;margin-left:3px;opacity:.4}.sort-icon.on{opacity:1}
+.pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 6px;border-radius:10px;background:#E6F1FB;color:#185FA5}
+.search-row{display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.search-row input{flex:1;min-width:200px;height:30px;padding:0 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg2);color:var(--text);outline:none}
+.rc{font-size:11px;color:var(--text3);white-space:nowrap}
+.pager{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.pager button{height:28px;padding:0 10px;font-size:11px;border:0.5px solid var(--border2);border-radius:var(--r);cursor:pointer;background:var(--bg2);color:var(--text2)}
+.pager button:hover{background:var(--bg3)}.pager button.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.pager-info{font-size:11px;color:var(--text3)}
+.bc{display:flex;align-items:center;gap:5px;padding:9px 14px;border-bottom:0.5px solid var(--border);background:var(--bg2);flex-wrap:wrap}
+.bc-item{font-size:12px;color:var(--text2);cursor:pointer;padding:2px 7px;border-radius:var(--r)}
+.bc-item:hover{background:rgba(0,0,0,.07)}.bc-item.active{color:var(--text);font-weight:500;cursor:default}
+.bc-sep{font-size:11px;color:var(--text3)}.bc-hint{margin-left:auto;font-size:11px;color:var(--text3)}
+.row-name{display:flex;align-items:center;gap:6px}
+.cat-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.da{font-size:12px;color:var(--text3);margin-left:auto;padding-left:6px;opacity:0}
+.bar-track{display:inline-block;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;vertical-align:middle;margin-left:5px}
+.bar-fill{height:100%;border-radius:3px}
+.sku-banner{background:#f0f4ff;border:0.5px solid #c5d4f5;border-radius:var(--r);padding:8px 12px;margin-bottom:10px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sku-banner button{margin-left:auto;font-size:11px;padding:3px 8px;border:0.5px solid var(--border2);border-radius:var(--r);cursor:pointer;background:transparent;color:var(--text2)}
+.section-title{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.close-btn{margin-left:auto;font-size:11px;padding:3px 8px;border:0.5px solid var(--border2);border-radius:var(--r);cursor:pointer;background:transparent;color:var(--text2)}
+/* PRINT */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:#fff!important;font-size:11px}
+  .shell{padding:0!important;max-width:100%!important}
+  .filters,.tabs,.reset-btn,.sku-banner button,.close-btn,#exportBtn,.pager{display:none!important}
+  .view{display:none!important}.view.active{display:block!important}
+  .drill-panel{display:none!important}.drill-panel.active{display:block!important}
+  .card{border:none!important;overflow:visible!important}
+  .tbl-scroll,.tbl-wrap{overflow:visible!important;max-height:none!important;border:0.5px solid #ddd!important}
+  .print-header{display:flex!important}
+  .print-filters{display:block!important}
+  .metrics{display:grid!important}
+  .mc{border:0.5px solid #ddd!important}
+  @page{margin:12mm 10mm;size:A4 landscape}
+  tr{page-break-inside:avoid}
+}
+@media screen{.print-header{display:none}.print-filters{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<div class="print-header" style="display:none;align-items:flex-start;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #ddd">
+  <div>
+    <div style="font-size:16px;font-weight:600">Ecommerce — Performance Ene-Abr YoY</div>
+    <div style="font-size:11px;color:#6b6a66;margin-top:2px" id="printSubtitle">Ene–Abr 2025 vs 2026</div>
+  </div>
+  <div style="text-align:right;font-size:10px;color:#999" id="printMeta"></div>
+</div>
+<div class="print-filters" style="display:none;font-size:10px;color:#6b6a66;margin-bottom:10px;padding:6px 10px;background:#f6f6f4;border-radius:6px;border:0.5px solid #ddd">
+  <span style="font-weight:500;color:#1a1a1a">Filtros activos: </span><span id="printFilters">—</span>
+</div>
+
+<div class="header">
+  <div>
+    <div class="title">Ecommerce — Performance Ene-Abr YoY</div>
+    <div class="subtitle" id="dashSubtitle">Ene–Abr 2025 vs 2026</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span class="badge">Ecommerce</span>
+    <button id="exportBtn" class="export-btn" onclick="exportPDF()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar PDF
+    </button>
+  </div>
+</div>
+
+<div class="filters">
+  <div class="fg"><label>Canal</label><select id="fCanal"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Animal</label><select id="fAnimal"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Nivel 1</label><select id="fN1"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Nivel 2</label><select id="fN2"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Nivel 3</label><select id="fN3"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Nivel 4</label><select id="fN4"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Proveedor</label><select id="fProv"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Marca</label><select id="fMarca"><option value="">Todas</option></select></div>
+  <div class="fg"><label>SKU</label><input id="fSku" placeholder="Ej: 101343" oninput="update()"></div>
+  <div class="fg"><label>Métrica</label>
+    <select id="fMetric"><option value="Vta">Venta ($)</option><option value="Uni">Unidades</option><option value="Kg">Kilos</option></select></div>
+  <button class="reset-btn" onclick="resetAll()">↺ Limpiar</button>
+</div>
+
+<div class="metrics" id="metricsRow"></div>
+
+<div class="card">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('brands')">Por marca</div>
+    <div class="tab" onclick="showTab('prov')">Por proveedor</div>
+    <div class="tab" onclick="showTab('canal')">Por canal</div>
+    <div class="tab" onclick="showTab('skus')">Por SKU</div>
+    <div class="tab" onclick="showTab('cats')">Categorías</div>
+  </div>
+
+  <!-- BRANDS -->
+  <div class="view active" id="view-brands">
+    <div class="chart-wrap"><canvas id="chartBrands"></canvas></div>
+    <div class="tbl-wrap"><table id="tblBrands"><thead></thead><tbody></tbody></table></div>
+    <div class="drill-panel" id="brandDrillPanel">
+      <div class="section-title">
+        <span class="brand-dot" id="brandDrillDot"></span>
+        <span id="brandDrillTitle"></span>
+        <button class="close-btn" onclick="closeDrill('brand')">✕ Cerrar</button>
+      </div>
+      <div class="drill-bc" id="brandDrillBc"></div>
+      <div class="chart-wrap"><canvas id="chartBrandDrill"></canvas></div>
+      <div class="tbl-scroll"><table id="tblBrandDrill"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PROVEEDOR -->
+  <div class="view" id="view-prov">
+    <div class="chart-wrap"><canvas id="chartProv"></canvas></div>
+    <div class="tbl-wrap"><table id="tblProv"><thead></thead><tbody></tbody></table></div>
+    <div class="drill-panel" id="provDrillPanel">
+      <div class="section-title">
+        <span class="brand-dot" id="provDrillDot"></span>
+        <span id="provDrillTitle"></span>
+        <button class="close-btn" onclick="closeDrill('prov')">✕ Cerrar</button>
+      </div>
+      <div class="drill-bc" id="provDrillBc"></div>
+      <div class="chart-wrap"><canvas id="chartProvDrill"></canvas></div>
+      <div class="tbl-scroll"><table id="tblProvDrill"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- CANAL -->
+  <div class="view" id="view-canal">
+    <div class="chart-wrap"><canvas id="chartCanal"></canvas></div>
+    <div class="tbl-wrap"><table id="tblCanal"><thead></thead><tbody></tbody></table></div>
+    <div class="drill-panel" id="canalDrillPanel">
+      <div class="section-title">
+        <span class="brand-dot" id="canalDrillDot"></span>
+        <span id="canalDrillTitle"></span>
+        <button class="close-btn" onclick="closeDrill('canal')">✕ Cerrar</button>
+      </div>
+      <div class="drill-bc" id="canalDrillBc"></div>
+      <div class="chart-wrap"><canvas id="chartCanalDrill"></canvas></div>
+      <div class="tbl-scroll"><table id="tblCanalDrill"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- SKUS -->
+  <div class="view" id="view-skus">
+    <div id="skuBanner" style="display:none"></div>
+    <div id="skuChartWrap" style="display:none"><div class="chart-wrap"><canvas id="chartSku"></canvas></div></div>
+    <div class="search-row">
+      <input id="skuSearch" placeholder="Buscar por SKU, nombre, marca o proveedor..." oninput="skuPage=1;renderSkus()">
+      <span class="rc" id="skuCount"></span>
+    </div>
+    <div class="tbl-scroll"><table id="tblSkus"><thead></thead><tbody></tbody></table></div>
+    <div class="pager" id="skuPager"></div>
+  </div>
+
+  <!-- CATS -->
+  <div class="view" id="view-cats">
+    <div class="chart-wrap-pie"><canvas id="chartCatPie"></canvas></div>
+    <div class="bc" id="catBc"></div>
+    <div class="tbl-scroll"><table id="tblCats"><thead></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<footer style="text-align:center;font-size:11px;color:var(--text3);padding:12px 0 6px">
+  Dashboard generado por Claude · Ecommerce Ene–Abr 2025 vs 2026
+</footer>
+</div>
+
+<script>
+const RAW=/*__RAW_DATA__*/;
+
+/* ── CONSTANTS ── */
+const BC=['#378ADD','#1D9E75','#D85A30','#7F77DD','#BA7517','#D4537E','#639922','#E24B4A','#5DCAA5','#EF9F27','#AFA9EC','#63C47A','#F0997B','#85B7EB','#97C459','#FAC775'];
+const CANAL_C={'vTex':'#378ADD','Mercado Libre':'#F5A623','Call Center':'#1D9E75','Retail':'#7F77DD','Corporativo':'#BA7517','other':'#999896'};
+const N1C={'ALIMENTOS':'#378ADD','SNACKS':'#1D9E75','FARMACIA':'#D85A30','ARENAS SANITARIAS':'#7F77DD','ACCESORIOS':'#BA7517','PETLOVERS':'#D4537E','SERVICIOS':'#888780','INSUMOS':'#639922','VIVOS':'#E24B4A','COMBOS  - ART PROMO':'#5DCAA5'};
+const PIE_C=['#378ADD','#1D9E75','#D85A30','#7F77DD','#BA7517','#D4537E','#639922','#E24B4A','#5DCAA5','#EF9F27','#AFA9EC','#63C47A'];
+const LEVELS=['N1','N2','N3','N4'];
+const brandList=[...new Set(RAW.map(d=>d.Marca))];
+const bC={};brandList.forEach((b,i)=>bC[b]=BC[i%BC.length]);
+
+/* ── STATE ── */
+let activeTab='brands';
+let charts={};
+let bSort={col:'v26',dir:-1},pSort={col:'v26',dir:-1},cSort={col:'v26',dir:-1},sSort={col:'v26',dir:-1},catSort={col:'v26',dir:-1};
+let drillState={
+  brand:{name:null,path:[],sort:{col:'v26',dir:-1},skuSort:{col:'v26',dir:-1}},
+  prov: {name:null,path:[],sort:{col:'v26',dir:-1},skuSort:{col:'v26',dir:-1}},
+  canal:{name:null,path:[],sort:{col:'v26',dir:-1},marcaSort:{col:'v26',dir:-1},skuSort:{col:'v26',dir:-1}},
+};
+let catPath=[], catSkuSort={col:'v26',dir:-1};
+let selectedSku=null, skuPage=1;
+const SKU_PAGE_SIZE=200;
+
+/* ── HELPERS ── */
+function getM(){return document.getElementById('fMetric').value;}
+function K25(){return getM()+'25';} function K26(){return getM()+'26';}
+function getFiltered(){
+  // Uses getFilteredExcept with no exclusions = all filters applied
+  return getFilteredExcept([]);
+}
+function fmt(v){
+  const m=getM();
+  if(m==='Vta') return '$'+Math.round(v).toLocaleString('es-CO');
+  if(m==='Kg') return Math.round(v).toLocaleString('es-CO')+' kg';
+  return Math.round(v).toLocaleString('es-CO')+' un';
+}
+function pct(a,b){if(a===0&&b===0)return null;if(a===0)return 999;return((b-a)/a)*100;}
+function pctHtml(p){
+  if(p===null)return '<span style="color:var(--text3)">—</span>';
+  if(p===999)return '<span class="pill">Nuevo</span>';
+  return `<span class="${p>=0?'pos':'neg'}">${p>=0?'+':''}${p.toFixed(1)}%</span>`;
+}
+function si(col,st){if(st.col!==col)return '<span class="sort-icon">⇅</span>';return `<span class="sort-icon on">${st.dir>0?'▲':'▼'}</span>`;}
+function ds(st,col){if(st.col===col)st.dir*=-1;else{st.col=col;st.dir=-1;}}
+function totalTr(cs,t25,t26){
+  const d=t26-t25,p=pct(t25,t26);
+  return `<tr class="total-row"><td colspan="${cs}" style="text-align:left">Total</td><td>${fmt(t25)}</td><td>${fmt(t26)}</td><td class="${d>=0?'pos':'neg'}">${d>=0?'+':''}${fmt(d)}</td><td>${pctHtml(p)}</td></tr>`;
+}
+function aggBy(data,key){
+  const a={};
+  data.forEach(d=>{if(!a[d[key]])a[d[key]]={v25:0,v26:0,n:new Set()};a[d[key]].v25+=d[K25()];a[d[key]].v26+=d[K26()];a[d[key]].n.add(d.SKU+'|'+d.Canal);});
+  return Object.entries(a).map(([nm,v])=>({name:nm,v25:v.v25,v26:v.v26,diff:v.v26-v.v25,pct:pct(v.v25,v.v26),skus:v.n.size}));
+}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function makeBar(id,labels,d25,d26,colors,inst){
+  destroyChart(inst||id);
+  charts[inst||id]=new Chart(document.getElementById(id),{type:'bar',
+    data:{labels,datasets:[
+      {label:'2025',data:d25,backgroundColor:colors.map(c=>c+'44'),borderColor:colors,borderWidth:1.5,borderRadius:3},
+      {label:'2026',data:d26,backgroundColor:colors,borderColor:colors,borderWidth:0,borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{font:{size:9},maxRotation:35}},y:{ticks:{font:{size:10},callback:v=>getM()==='Vta'?'$'+Math.round(v/1e6)+'M':Math.round(v/1000)+'k'}}}}
+  });
+  return charts[inst||id];
+}
+function makePie(id,rows,inst){
+  destroyChart(inst||id);
+  const s=[...rows].sort((a,b)=>b.v26-a.v26).slice(0,12);
+  const tot=s.reduce((t,r)=>t+r.v26,0);
+  charts[inst||id]=new Chart(document.getElementById(id),{type:'doughnut',
+    data:{labels:s.map(r=>`${r.name} (${tot>0?((r.v26/tot)*100).toFixed(1):0}%)`),
+      datasets:[{data:s.map(r=>Math.round(r.v26)),backgroundColor:s.map((_,i)=>PIE_C[i%PIE_C.length]),borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'52%',
+      plugins:{legend:{position:'right',labels:{font:{size:10},padding:8,boxWidth:11}},
+        tooltip:{callbacks:{label:c=>{const v=c.parsed;return ` ${fmt(v)} (${tot>0?((v/tot)*100).toFixed(1):0}%)`;}}}}
+    }
+  });
+}
+
+/* ── METRICS ── */
+function updateMetrics(data){
+  const t25=data.reduce((s,d)=>s+d[K25()],0),t26=data.reduce((s,d)=>s+d[K26()],0);
+  const p=pct(t25,t26),ps=p===null?'—':p===999?'Nuevo':(p>=0?'+':'')+p.toFixed(1)+'%';
+  document.getElementById('metricsRow').innerHTML=`
+    <div class="mc"><div class="mc-label">Ene–Abr 2025</div><div class="mc-val">${fmt(t25)}</div><div class="mc-sub">${data.filter(d=>d[K25()]>0).length} registros activos</div></div>
+    <div class="mc"><div class="mc-label">Ene–Abr 2026</div><div class="mc-val">${fmt(t26)}</div><div class="mc-sub">${data.filter(d=>d[K26()]>0).length} registros activos</div></div>
+    <div class="mc"><div class="mc-label">Variación YoY</div><div class="mc-val ${p!==null&&p<0?'neg':'pos'}">${ps}</div><div class="mc-sub">${fmt(t26-t25)} absoluto</div></div>
+    <div class="mc"><div class="mc-label">Registros</div><div class="mc-val">${data.length}</div><div class="mc-sub">${[...new Set(data.map(d=>d.Marca))].length} marcas · ${[...new Set(data.map(d=>d.Canal))].length} canales</div></div>`;
+}
+
+/* ── SORTABLE TABLE HEAD ── */
+function th6(lbl,col,st,fn){return `<th class="sortable${st.col===col?' sort-active':''}" onclick="${fn}('${col}')">${lbl} ${si(col,st)}</th>`;}
+function stdHead(dimLbl,st,fn){
+  return `<tr><th class="sortable${st.col==='name'?' sort-active':''}" onclick="${fn}('name')" style="text-align:left">${dimLbl} ${si('name',st)}</th>
+    ${th6('Reg.',  'skus',st,fn)}${th6('2025','v25',st,fn)}${th6('2026','v26',st,fn)}${th6('Diferencia','diff',st,fn)}${th6('YoY%','pct',st,fn)}</tr>`;
+}
+function sortRows(rows,st){
+  return rows.sort((a,b)=>{
+    if(st.col==='pct'){const pa=a.pct===999?1e9:(a.pct||0),pb=b.pct===999?1e9:(b.pct||0);return st.dir*(pa-pb);}
+    if(st.col==='name')return st.dir*(a.name<b.name?-1:1);
+    return st.dir*(a[st.col]-b[st.col]);
+  });
+}
+function stdRows(rows,st,maxV,clickFn,color){
+  sortRows(rows,st);
+  return rows.map(r=>{
+    const c=color||(N1C[r.name]||PIE_C[rows.indexOf(r)%PIE_C.length]);
+    const bw=Math.round(r.v26/Math.max(maxV,1)*60)+4;
+    return `<tr class="${clickFn?'clickable':''}" ${clickFn?`onclick="${clickFn}('${r.name.replace(/'/g,"\\'")}')"`:''}>
+      <td><div class="row-name"><span class="cat-dot" style="background:${c}"></span><span style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block" title="${r.name}">${r.name}</span>${clickFn?'<span class="da">›</span>':''}</div></td>
+      <td style="color:var(--text3);font-size:11px">${r.skus}</td>
+      <td style="color:var(--text2)">${fmt(r.v25)}</td>
+      <td>${fmt(r.v26)}<div class="bar-track" style="width:${bw}px;display:inline-block"><div class="bar-fill" style="width:100%;background:${c}"></div></div></td>
+      <td class="${r.diff>=0?'pos':'neg'}">${r.diff>=0?'+':''}${fmt(r.diff)}</td>
+      <td>${pctHtml(r.pct)}</td></tr>`;
+  }).join('');
+}
+
+/* ── SKU TABLE (sortable) ── */
+function skuHead(st,fn){
+  const s=(col,lbl)=>th6(lbl,col,st,fn);
+  return `<tr>
+    <th class="sortable${st.col==='sku'?' sort-active':''}" onclick="${fn}('sku')" style="text-align:left;width:68px">SKU ${si('sku',st)}</th>
+    <th class="sortable${st.col==='nombre'?' sort-active':''}" onclick="${fn}('nombre')" style="text-align:left">Producto ${si('nombre',st)}</th>
+    <th style="text-align:left">Canal</th>
+    <th style="text-align:left">Marca</th>
+    ${s('v25','2025')}${s('v26','2026')}${s('diff','Diferencia')}${s('yoy','YoY%')}</tr>`;
+}
+function skuRows(rows,st,color,maxV){
+  rows.forEach(r=>r._diff=r[K26()]-r[K25()]);
+  if(st.col==='yoy') rows.sort((a,b)=>{const pa=pct(a[K25()],a[K26()])||0,pb=pct(b[K25()],b[K26()])||0;return st.dir*(pa-pb);});
+  else if(st.col==='nombre') rows.sort((a,b)=>st.dir*(a.Nombre<b.Nombre?-1:1));
+  else if(st.col==='sku')    rows.sort((a,b)=>st.dir*(a.SKU<b.SKU?-1:1));
+  else if(st.col==='canal')  rows.sort((a,b)=>st.dir*(a.Canal<b.Canal?-1:1));
+  else if(st.col==='diff')   rows.sort((a,b)=>st.dir*(a._diff-b._diff));
+  else rows.sort((a,b)=>st.dir*(a[st.col]-b[st.col]));
+  const mv=maxV||Math.max(...rows.map(r=>r[K26()]),1);
+  const col=color||'#378ADD';
+  return rows.map(r=>`<tr>
+    <td style="font-family:monospace;font-size:11px;color:var(--text3)">${r.SKU}</td>
+    <td style="text-align:left;font-size:11px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Nombre}">${r.Nombre}</td>
+    <td style="text-align:left;font-size:11px"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${CANAL_C[r.Canal]||'#888'};margin-right:4px;vertical-align:middle"></span>${r.Canal}</td>
+    <td style="text-align:left;font-size:11px"><span class="brand-dot" style="background:${bC[r.Marca]||'#888'}"></span>${r.Marca}</td>
+    <td style="color:var(--text2)">${fmt(r[K25()])}</td>
+    <td>${fmt(r[K26()])}<div class="bar-track" style="width:${Math.round(r[K26()]/mv*44)+4}px;display:inline-block"><div class="bar-fill" style="width:100%;background:${col}"></div></div></td>
+    <td class="${r._diff>=0?'pos':'neg'}">${r._diff>=0?'+':''}${fmt(r._diff)}</td>
+    <td>${pctHtml(pct(r[K25()],r[K26()]))}</td></tr>`).join('');
+}
+
+/* ── GENERIC DRILL RENDERER ── */
+// context: 'brand' | 'prov' | 'canal'
+// For canal: after N4 shows Marca, then SKU
+function getDrillData(ctx){
+  const ds=drillState[ctx];
+  let data;
+  if(ctx==='brand') data=RAW.filter(d=>d.Marca===ds.name);
+  else if(ctx==='prov') data=RAW.filter(d=>d.Proveedor===ds.name);
+  else data=RAW.filter(d=>d.Canal===ds.name);
+  // apply global filters (except the drill dimension)
+  const an=document.getElementById('fAnimal').value,n1=document.getElementById('fN1').value,
+    n2=document.getElementById('fN2').value,n3=document.getElementById('fN3').value,
+    n4=document.getElementById('fN4').value,pv=document.getElementById('fProv').value,
+    mc=document.getElementById('fMarca').value,ca=document.getElementById('fCanal').value;
+  if(ctx!=='canal') data=data.filter(d=>(!ca||d.Canal===ca));
+  if(ctx!=='brand') data=data.filter(d=>(!mc||d.Marca===mc));
+  if(ctx!=='prov')  data=data.filter(d=>(!pv||d.Proveedor===pv));
+  data=data.filter(d=>(!an||d.Animal===an)&&(!n1||d.N1===n1)&&(!n2||d.N2===n2)&&(!n3||d.N3===n3)&&(!n4||d.N4===n4));
+  // apply path filters
+  ds.path.filter(p=>p.level!=='Marca').forEach(p=>data=data.filter(d=>d[p.level]===p.value));
+  const mf=ds.path.find(p=>p.level==='Marca');
+  if(mf) data=data.filter(d=>d.Marca===mf.value);
+  return data;
+}
+
+function renderDrill(ctx){
+  const ds=drillState[ctx];
+  if(!ds.name) return;
+  const ids={brand:{panel:'brandDrillPanel',dot:'brandDrillDot',title:'brandDrillTitle',bc:'brandDrillBc',chart:'chartBrandDrill',tbl:'tblBrandDrill'},
+              prov: {panel:'provDrillPanel', dot:'provDrillDot', title:'provDrillTitle', bc:'provDrillBc', chart:'chartProvDrill', tbl:'tblProvDrill'},
+              canal:{panel:'canalDrillPanel',dot:'canalDrillDot',title:'canalDrillTitle',bc:'canalDrillBc',chart:'chartCanalDrill',tbl:'tblCanalDrill'}};
+  const id=ids[ctx];
+  document.getElementById(id.panel).classList.add('active');
+  const baseColor=ctx==='brand'?(bC[ds.name]||'#888'):ctx==='prov'?(PIE_C[[...new Set(RAW.map(d=>d.Proveedor))].sort().indexOf(ds.name)%PIE_C.length]):(CANAL_C[ds.name]||'#888');
+  document.getElementById(id.dot).style.background=baseColor;
+  const data=getDrillData(ctx);
+  const stage=ds.path.length;
+  // canal: 0-3=N1-N4, 4=Marca, 5=SKU ; brand/prov: 0-3=N1-N4, 4=SKU
+  const maxStage=ctx==='canal'?5:4;
+  const curLevel=stage<4?LEVELS[stage]:null;
+  const isMarcaStage=ctx==='canal'&&stage===4;
+  const isSkuStage=stage===maxStage;
+  // title + breadcrumb
+  const nm=ds.name;
+  document.getElementById(id.title).textContent=nm+(stage?' › '+ds.path.map(p=>p.value).join(' › '):'');
+  const lbl=ctx==='canal'?['N1','N2','N3','N4','Marca','SKU']:['N1','N2','N3','N4','SKU'];
+  let bc=`<span class="drill-bc-item${stage===0?' active':''}" onclick="drillTo('${ctx}',-1)">${nm}</span>`;
+  ds.path.forEach((p,i)=>{bc+=`<span class="drill-bc-sep">›</span><span class="drill-bc-item${i===stage-1?' active':''}" onclick="drillTo('${ctx}',${i})">${p.value}</span>`;});
+  if(stage<maxStage) bc+=`<span style="margin-left:auto;font-size:11px;color:var(--text3)">${lbl[stage]}</span>`;
+  document.getElementById(id.bc).innerHTML=bc;
+
+  if(isSkuStage){
+    // SKU list
+    const rows=[...data];const mv=Math.max(...rows.map(r=>r[K26()]),1);
+    const t25=data.reduce((s,d)=>s+d[K25()],0),t26=data.reduce((s,d)=>s+d[K26()],0);
+    const top=rows.slice().sort((a,b)=>b[K26()]-a[K26()]).slice(0,10);
+    makeBar(id.chart,top.map(r=>r.Nombre.slice(0,28)),top.map(r=>Math.round(r[K25()])),top.map(r=>Math.round(r[K26()])),top.map(()=>baseColor),id.chart);
+    const st=ds.skuSort;const fn=`drillSkuSort('${ctx}'`;
+    const tbl=document.getElementById(id.tbl);
+    tbl.querySelector('thead').innerHTML=`<tr>
+      <th class="sortable${st.col==='sku'?' sort-active':''}" onclick="drillSkuSort('${ctx}','sku')" style="text-align:left;width:68px">SKU ${si('sku',st)}</th>
+      <th class="sortable${st.col==='nombre'?' sort-active':''}" onclick="drillSkuSort('${ctx}','nombre')" style="text-align:left">Producto ${si('nombre',st)}</th>
+      <th style="text-align:left">Canal</th>
+      <th class="sortable${st.col==='v25'?' sort-active':''}" onclick="drillSkuSort('${ctx}','v25')">2025 ${si('v25',st)}</th>
+      <th class="sortable${st.col==='v26'?' sort-active':''}" onclick="drillSkuSort('${ctx}','v26')">2026 ${si('v26',st)}</th>
+      <th class="sortable${st.col==='diff'?' sort-active':''}" onclick="drillSkuSort('${ctx}','diff')">Diferencia ${si('diff',st)}</th>
+      <th class="sortable${st.col==='yoy'?' sort-active':''}" onclick="drillSkuSort('${ctx}','yoy')">YoY% ${si('yoy',st)}</th></tr>`;
+    tbl.querySelector('tbody').innerHTML=skuRows(rows,st,baseColor,mv)+
+      `<tr class="total-row"><td colspan="3" style="text-align:left">Total</td><td>${fmt(t25)}</td><td>${fmt(t26)}</td><td class="${t26-t25>=0?'pos':'neg'}">${t26-t25>=0?'+':''}${fmt(t26-t25)}</td><td>${pctHtml(pct(t25,t26))}</td></tr>`;
+    return;
+  }
+
+  let rows,groupKey,sortSt,sortFnPfx,dimLbl;
+  if(isMarcaStage){
+    rows=aggBy(data,'Marca');groupKey='Marca';sortSt=ds.marcaSort;sortFnPfx=`drillMarcaSort('${ctx}'`;dimLbl='Marca';
+  } else {
+    rows=aggBy(data,curLevel);groupKey=curLevel;sortSt=ds.sort;sortFnPfx=`drillSort('${ctx}'`;
+    dimLbl={N1:'Categoría N1',N2:'Subcategoría N2',N3:'Tipo N3',N4:'Detalle N4'}[curLevel];
+  }
+  const top=rows.slice().sort((a,b)=>b.v26-a.v26).slice(0,10);
+  const topColors=isMarcaStage?top.map(r=>bC[r.name]||baseColor):top.map((_,i)=>PIE_C[i%PIE_C.length]);
+  makeBar(id.chart,top.map(r=>r.name),top.map(r=>Math.round(r.v25)),top.map(r=>Math.round(r.v26)),topColors,id.chart);
+  const maxV=Math.max(...rows.map(r=>r.v26),1);
+  const t25=rows.reduce((s,r)=>s+r.v25,0),t26=rows.reduce((s,r)=>s+r.v26,0);
+  const isLeaf=(curLevel==='N4'&&!isMarcaStage)||isMarcaStage;
+  const tbl=document.getElementById(id.tbl);
+  // thead with correct sort fn
+  tbl.querySelector('thead').innerHTML=`<tr>
+    <th class="sortable${sortSt.col==='name'?' sort-active':''}" onclick="${sortFnPfx},'name')" style="text-align:left">${dimLbl} ${si('name',sortSt)}</th>
+    <th class="sortable${sortSt.col==='skus'?' sort-active':''}" onclick="${sortFnPfx},'skus')">Reg. ${si('skus',sortSt)}</th>
+    <th class="sortable${sortSt.col==='v25'?' sort-active':''}" onclick="${sortFnPfx},'v25')">2025 ${si('v25',sortSt)}</th>
+    <th class="sortable${sortSt.col==='v26'?' sort-active':''}" onclick="${sortFnPfx},'v26')">2026 ${si('v26',sortSt)}</th>
+    <th class="sortable${sortSt.col==='diff'?' sort-active':''}" onclick="${sortFnPfx},'diff')">Diferencia ${si('diff',sortSt)}</th>
+    <th class="sortable${sortSt.col==='pct'?' sort-active':''}" onclick="${sortFnPfx},'pct')">YoY% ${si('pct',sortSt)}</th></tr>`;
+  // next level click function
+  const nextFn=isLeaf
+    ? (isMarcaStage ? `drillDown('${ctx}','Marca',` : `drillDown('${ctx}','N4',`)
+    : `drillDown('${ctx}','${curLevel}',`;
+  tbl.querySelector('tbody').innerHTML=stdRows(rows,sortSt,maxV,`${nextFn.slice(0,-1).replace(/'/g,"\\'")}`, isMarcaStage?null:null)+totalTr(2,t25,t26);
+  // re-render rows with proper click
+  sortRows(rows,sortSt);
+  tbl.querySelector('tbody').innerHTML=rows.map(r=>{
+    const c=isMarcaStage?(bC[r.name]||baseColor):(N1C[rows.length>0&&!isMarcaStage?drillState[ctx].path[0]?.value||'':r.name]||PIE_C[rows.indexOf(r)%PIE_C.length]);
+    const bw=Math.round(r.v26/maxV*60)+4;
+    const lvl=isMarcaStage?'Marca':curLevel;
+    return `<tr class="clickable" onclick="drillDown('${ctx}','${lvl}','${r.name.replace(/'/g,"\\'")}')">
+      <td><div class="row-name"><span class="cat-dot" style="background:${c}"></span><span style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block" title="${r.name}">${r.name}</span><span class="da">›</span></div></td>
+      <td style="color:var(--text3);font-size:11px">${r.skus}</td>
+      <td style="color:var(--text2)">${fmt(r.v25)}</td>
+      <td>${fmt(r.v26)}<div class="bar-track" style="width:${bw}px;display:inline-block"><div class="bar-fill" style="width:100%;background:${c}"></div></div></td>
+      <td class="${r.diff>=0?'pos':'neg'}">${r.diff>=0?'+':''}${fmt(r.diff)}</td>
+      <td>${pctHtml(r.pct)}</td></tr>`;
+  }).join('')+totalTr(2,t25,t26);
+}
+
+function drillDown(ctx,level,val){
+  drillState[ctx].path.push({level,value:val});
+  drillState[ctx].sort={col:'v26',dir:-1};
+  if(ctx==='canal') drillState[ctx].marcaSort={col:'v26',dir:-1};
+  drillState[ctx].skuSort={col:'v26',dir:-1};
+  renderDrill(ctx);
+  document.getElementById({brand:'brandDrillPanel',prov:'provDrillPanel',canal:'canalDrillPanel'}[ctx]).scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function drillTo(ctx,idx){
+  drillState[ctx].path=idx===-1?[]:drillState[ctx].path.slice(0,idx+1);
+  drillState[ctx].sort={col:'v26',dir:-1};
+  if(ctx==='canal') drillState[ctx].marcaSort={col:'v26',dir:-1};
+  drillState[ctx].skuSort={col:'v26',dir:-1};
+  renderDrill(ctx);
+}
+function drillSort(ctx,col){ds(drillState[ctx].sort,col);renderDrill(ctx);}
+function drillMarcaSort(ctx,col){ds(drillState[ctx].marcaSort,col);renderDrill(ctx);}
+function drillSkuSort(ctx,col){ds(drillState[ctx].skuSort,col);renderDrill(ctx);}
+function openDrill(ctx,name){
+  drillState[ctx]={name,path:[],sort:{col:'v26',dir:-1},marcaSort:{col:'v26',dir:-1},skuSort:{col:'v26',dir:-1}};
+  renderDrill(ctx);
+  const panelId={brand:'brandDrillPanel',prov:'provDrillPanel',canal:'canalDrillPanel'}[ctx];
+  document.getElementById(panelId).scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeDrill(ctx){
+  const panelId={brand:'brandDrillPanel',prov:'provDrillPanel',canal:'canalDrillPanel'}[ctx];
+  document.getElementById(panelId).classList.remove('active');
+  drillState[ctx].name=null;drillState[ctx].path=[];
+  destroyChart({brand:'chartBrandDrill',prov:'chartProvDrill',canal:'chartCanalDrill'}[ctx]);
+}
+
+/* ── BRANDS ── */
+function renderBrands(data){
+  const rows=aggBy(data,'Marca');
+  const top=[...rows].sort((a,b)=>b.v26-a.v26).slice(0,12);
+  makeBar('chartBrands',top.map(r=>r.name),top.map(r=>Math.round(r.v25)),top.map(r=>Math.round(r.v26)),top.map(r=>bC[r.name]||'#888'),'chartBrands');
+  sortRows(rows,bSort);
+  const maxV=Math.max(...rows.map(r=>r.v26),1);
+  const t25=rows.reduce((s,r)=>s+r.v25,0),t26=rows.reduce((s,r)=>s+r.v26,0);
+  const showAll=window._bAll||false;const hidden=rows.length-10;
+  const tbl=document.getElementById('tblBrands');
+  tbl.querySelector('thead').innerHTML=`<tr>
+    <th class="sortable${bSort.col==='name'?' sort-active':''}" onclick="bSortBy('name')" style="text-align:left">Marca ${si('name',bSort)}</th>
+    <th class="sortable${bSort.col==='skus'?' sort-active':''}" onclick="bSortBy('skus')">Reg. ${si('skus',bSort)}</th>
+    <th class="sortable${bSort.col==='v25'?' sort-active':''}" onclick="bSortBy('v25')">2025 ${si('v25',bSort)}</th>
+    <th class="sortable${bSort.col==='v26'?' sort-active':''}" onclick="bSortBy('v26')">2026 ${si('v26',bSort)}</th>
+    <th class="sortable${bSort.col==='diff'?' sort-active':''}" onclick="bSortBy('diff')">Diferencia ${si('diff',bSort)}</th>
+    <th class="sortable${bSort.col==='pct'?' sort-active':''}" onclick="bSortBy('pct')">YoY% ${si('pct',bSort)}</th></tr>`;
+  const display=showAll?rows:rows.slice(0,10);
+  const mk=r=>{const c=bC[r.name]||'#888';return `<tr class="clickable" onclick="openDrill('brand','${r.name.replace(/'/g,"\\'")}')">
+    <td><div class="row-name"><span class="brand-dot" style="background:${c}"></span>${r.name}<span class="da">›</span></div></td>
+    <td style="color:var(--text3);font-size:11px">${r.skus}</td><td style="color:var(--text2)">${fmt(r.v25)}</td>
+    <td><span class="bar-mini" style="width:${Math.round(r.v26/maxV*56)+4}px;background:${c}"></span>${fmt(r.v26)}</td>
+    <td class="${r.diff>=0?'pos':'neg'}">${r.diff>=0?'+':''}${fmt(r.diff)}</td><td>${pctHtml(r.pct)}</td></tr>`;};
+  const tog=!showAll&&hidden>0?`<tr onclick="window._bAll=true;renderBrands(getFiltered())" style="cursor:pointer"><td colspan="6" style="text-align:center;color:var(--text2);padding:8px;font-size:12px;background:var(--bg2)">↓ Ver ${hidden} marcas más</td></tr>`:
+            showAll&&hidden>0?`<tr onclick="window._bAll=false;renderBrands(getFiltered())" style="cursor:pointer"><td colspan="6" style="text-align:center;color:var(--text2);padding:8px;font-size:12px;background:var(--bg2)">↑ Mostrar solo top 10</td></tr>`:'';
+  tbl.querySelector('tbody').innerHTML=display.map(mk).join('')+tog+totalTr(1,t25,t26);
+}
+function bSortBy(col){ds(bSort,col);renderBrands(getFiltered());}
+
+/* ── PROV ── */
+function renderProv(data){
+  const rows=aggBy(data,'Proveedor');
+  const top=[...rows].sort((a,b)=>b.v26-a.v26).slice(0,12);
+  makeBar('chartProv',top.map(r=>r.name),top.map(r=>Math.round(r.v25)),top.map(r=>Math.round(r.v26)),top.map((_,i)=>PIE_C[i%PIE_C.length]),'chartProv');
+  sortRows(rows,pSort);
+  const maxV=Math.max(...rows.map(r=>r.v26),1);
+  const t25=rows.reduce((s,r)=>s+r.v25,0),t26=rows.reduce((s,r)=>s+r.v26,0);
+  const showAll=window._pAll||false;const hidden=rows.length-10;
+  const tbl=document.getElementById('tblProv');
+  tbl.querySelector('thead').innerHTML=`<tr>
+    <th class="sortable${pSort.col==='name'?' sort-active':''}" onclick="pSortBy('name')" style="text-align:left">Proveedor ${si('name',pSort)}</th>
+    <th class="sortable${pSort.col==='skus'?' sort-active':''}" onclick="pSortBy('skus')">Reg. ${si('skus',pSort)}</th>
+    <th class="sortable${pSort.col==='v25'?' sort-active':''}" onclick="pSortBy('v25')">2025 ${si('v25',pSort)}</th>
+    <th class="sortable${pSort.col==='v26'?' sort-active':''}" onclick="pSortBy('v26')">2026 ${si('v26',pSort)}</th>
+    <th class="sortable${pSort.col==='diff'?' sort-active':''}" onclick="pSortBy('diff')">Diferencia ${si('diff',pSort)}</th>
+    <th class="sortable${pSort.col==='pct'?' sort-active':''}" onclick="pSortBy('pct')">YoY% ${si('pct',pSort)}</th></tr>`;
+  const display=showAll?rows:rows.slice(0,10);
+  const mk=r=>{const c=PIE_C[rows.indexOf(r)%PIE_C.length];return `<tr class="clickable" onclick="openDrill('prov','${r.name.replace(/'/g,"\\'")}')">
+    <td><div class="row-name"><span class="brand-dot" style="background:${c}"></span>${r.name}<span class="da">›</span></div></td>
+    <td style="color:var(--text3);font-size:11px">${r.skus}</td><td style="color:var(--text2)">${fmt(r.v25)}</td>
+    <td><span class="bar-mini" style="width:${Math.round(r.v26/maxV*56)+4}px;background:${c}"></span>${fmt(r.v26)}</td>
+    <td class="${r.diff>=0?'pos':'neg'}">${r.diff>=0?'+':''}${fmt(r.diff)}</td><td>${pctHtml(r.pct)}</td></tr>`;};
+  const tog=!showAll&&hidden>0?`<tr onclick="window._pAll=true;renderProv(getFiltered())" style="cursor:pointer"><td colspan="6" style="text-align:center;color:var(--text2);padding:8px;font-size:12px;background:var(--bg2)">↓ Ver ${hidden} proveedores más</td></tr>`:
+            showAll&&hidden>0?`<tr onclick="window._pAll=false;renderProv(getFiltered())" style="cursor:pointer"><td colspan="6" style="text-align:center;color:var(--text2);padding:8px;font-size:12px;background:var(--bg2)">↑ Mostrar solo top 10</td></tr>`:'';
+  tbl.querySelector('tbody').innerHTML=display.map(mk).join('')+tog+totalTr(1,t25,t26);
+}
+function pSortBy(col){ds(pSort,col);renderProv(getFiltered());}
+
+/* ── CANAL ── */
+function renderCanal(data){
+  const rows=aggBy(data,'Canal');
+  const top=[...rows].sort((a,b)=>b.v26-a.v26);
+  makeBar('chartCanal',top.map(r=>r.name),top.map(r=>Math.round(r.v25)),top.map(r=>Math.round(r.v26)),top.map(r=>CANAL_C[r.name]||'#888'),'chartCanal');
+  sortRows(rows,cSort);
+  const maxV=Math.max(...rows.map(r=>r.v26),1);
+  const t25=rows.reduce((s,r)=>s+r.v25,0),t26=rows.reduce((s,r)=>s+r.v26,0);
+  const tbl=document.getElementById('tblCanal');
+  tbl.querySelector('thead').innerHTML=`<tr>
+    <th class="sortable${cSort.col==='name'?' sort-active':''}" onclick="cSortBy('name')" style="text-align:left">Canal ${si('name',cSort)}</th>
+    <th class="sortable${cSort.col==='skus'?' sort-active':''}" onclick="cSortBy('skus')">Reg. ${si('skus',cSort)}</th>
+    <th class="sortable${cSort.col==='v25'?' sort-active':''}" onclick="cSortBy('v25')">2025 ${si('v25',cSort)}</th>
+    <th class="sortable${cSort.col==='v26'?' sort-active':''}" onclick="cSortBy('v26')">2026 ${si('v26',cSort)}</th>
+    <th class="sortable${cSort.col==='diff'?' sort-active':''}" onclick="cSortBy('diff')">Diferencia ${si('diff',cSort)}</th>
+    <th class="sortable${cSort.col==='pct'?' sort-active':''}" onclick="cSortBy('pct')">YoY% ${si('pct',cSort)}</th></tr>`;
+  tbl.querySelector('tbody').innerHTML=rows.map(r=>{const c=CANAL_C[r.name]||'#888';return `<tr class="clickable" onclick="openDrill('canal','${r.name}')">
+    <td><div class="row-name"><span class="cat-dot" style="background:${c}"></span>${r.name}<span class="da">›</span></div></td>
+    <td style="color:var(--text3);font-size:11px">${r.skus}</td><td style="color:var(--text2)">${fmt(r.v25)}</td>
+    <td><span class="bar-mini" style="width:${Math.round(r.v26/maxV*56)+4}px;background:${c}"></span>${fmt(r.v26)}</td>
+    <td class="${r.diff>=0?'pos':'neg'}">${r.diff>=0?'+':''}${fmt(r.diff)}</td><td>${pctHtml(r.pct)}</td></tr>`;}).join('')+totalTr(1,t25,t26);
+}
+function cSortBy(col){ds(cSort,col);renderCanal(getFiltered());}
+
+/* ── SKUS ── */
+function renderSkus(){
+  const data=getFiltered(),q=document.getElementById('skuSearch').value.toLowerCase();
+  let rows=data.filter(d=>!q||(d.SKU+d.Nombre+d.Marca+d.Proveedor).toLowerCase().includes(q));
+  const total=rows.length;
+  const pages=Math.ceil(total/SKU_PAGE_SIZE);
+  skuPage=Math.max(1,Math.min(skuPage,pages||1));
+  const t25=rows.reduce((s,r)=>s+r[K25()],0),t26=rows.reduce((s,r)=>s+r[K26()],0);
+  document.getElementById('skuCount').textContent=total.toLocaleString('es-CO')+' registros';
+  // sort full list first
+  rows.forEach(r=>r._diff=r[K26()]-r[K25()]);
+  if(sSort.col==='yoy') rows.sort((a,b)=>{const pa=pct(a[K25()],a[K26()])||0,pb=pct(b[K25()],b[K26()])||0;return sSort.dir*(pa-pb);});
+  else if(sSort.col==='nombre') rows.sort((a,b)=>sSort.dir*(a.Nombre<b.Nombre?-1:1));
+  else if(sSort.col==='sku')    rows.sort((a,b)=>sSort.dir*(a.SKU<b.SKU?-1:1));
+  else if(sSort.col==='diff')   rows.sort((a,b)=>sSort.dir*(a._diff-b._diff));
+  else rows.sort((a,b)=>sSort.dir*(a[sSort.col]-b[sSort.col]));
+  const page=rows.slice((skuPage-1)*SKU_PAGE_SIZE, skuPage*SKU_PAGE_SIZE);
+  const mv=Math.max(...rows.map(r=>r[K26()]),1);
+  const tbl=document.getElementById('tblSkus');
+  tbl.querySelector('thead').innerHTML=`<tr>
+    <th class="sortable${sSort.col==='sku'?' sort-active':''}" onclick="sSortBy('sku')" style="text-align:left;width:68px">SKU ${si('sku',sSort)}</th>
+    <th class="sortable${sSort.col==='nombre'?' sort-active':''}" onclick="sSortBy('nombre')" style="text-align:left">Producto ${si('nombre',sSort)}</th>
+    <th style="text-align:left">Canal</th>
+    <th style="text-align:left">Marca</th>
+    <th class="sortable${sSort.col===K25()?' sort-active':''}" onclick="sSortBy('${K25()}')">2025 ${si(K25(),sSort)}</th>
+    <th class="sortable${sSort.col===K26()?' sort-active':''}" onclick="sSortBy('${K26()}')">2026 ${si(K26(),sSort)}</th>
+    <th class="sortable${sSort.col==='diff'?' sort-active':''}" onclick="sSortBy('diff')">Diferencia ${si('diff',sSort)}</th>
+    <th class="sortable${sSort.col==='yoy'?' sort-active':''}" onclick="sSortBy('yoy')">YoY% ${si('yoy',sSort)}</th></tr>`;
+  tbl.querySelector('tbody').innerHTML=page.map(r=>{
+    const key=r.SKU+'|'+r.Canal;
+    return `<tr class="sku-row${selectedSku===key?' selected':''}" data-key="${key}" onclick="showSkuChart('${r.SKU}','${r.Canal.replace(/'/g,"\\'")}')">
+      <td style="font-family:monospace;font-size:11px;color:var(--text3)">${r.SKU}</td>
+      <td style="text-align:left;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Nombre}">${r.Nombre}</td>
+      <td style="text-align:left;font-size:11px"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${CANAL_C[r.Canal]||'#888'};margin-right:4px;vertical-align:middle"></span>${r.Canal}</td>
+      <td style="text-align:left;font-size:11px"><span class="brand-dot" style="background:${bC[r.Marca]||'#888'}"></span>${r.Marca}</td>
+      <td style="color:var(--text2)">${fmt(r[K25()])}</td>
+      <td><span class="bar-mini" style="width:${Math.round(r[K26()]/mv*44)+4}px;background:${CANAL_C[r.Canal]||'#888'}"></span>${fmt(r[K26()])}</td>
+      <td class="${r._diff>=0?'pos':'neg'}">${r._diff>=0?'+':''}${fmt(r._diff)}</td>
+      <td>${pctHtml(pct(r[K25()],r[K26()]))}</td></tr>`;
+  }).join('')+
+  `<tr class="total-row"><td colspan="4" style="text-align:left">Total (${total.toLocaleString('es-CO')} reg.)</td><td>${fmt(t25)}</td><td>${fmt(t26)}</td><td class="${t26-t25>=0?'pos':'neg'}">${t26-t25>=0?'+':''}${fmt(t26-t25)}</td><td>${pctHtml(pct(t25,t26))}</td></tr>`;
+  // Pager
+  const pg=document.getElementById('skuPager');
+  if(pages<=1){pg.innerHTML='';return;}
+  let html='';
+  const start=Math.max(1,skuPage-2),end=Math.min(pages,skuPage+2);
+  if(start>1) html+=`<button onclick="skuPage=1;renderSkus()">1</button>${start>2?'<span class="pager-info">…</span>':''}`;
+  for(let i=start;i<=end;i++) html+=`<button class="${i===skuPage?'active':''}" onclick="skuPage=${i};renderSkus()">${i}</button>`;
+  if(end<pages) html+=`${end<pages-1?'<span class="pager-info">…</span>':''}<button onclick="skuPage=${pages};renderSkus()">${pages}</button>`;
+  html+=`<span class="pager-info">Pág. ${skuPage}/${pages} · ${total.toLocaleString('es-CO')} registros</span>`;
+  pg.innerHTML=html;
+}
+function sSortBy(col){ds(sSort,col);skuPage=1;renderSkus();}
+function showSkuChart(skuId,canal){
+  const d=RAW.find(r=>r.SKU===skuId&&r.Canal===canal);if(!d)return;
+  const key=skuId+'|'+canal; selectedSku=key;
+  document.getElementById('skuChartWrap').style.display='block';
+  document.getElementById('skuBanner').style.display='flex';
+  document.getElementById('skuBanner').innerHTML=`<span>Viendo: <strong>${d.Nombre}</strong> <span style="color:var(--text2);font-size:11px">(${d.SKU} · ${d.Canal})</span></span><button onclick="clearSkuChart()">✕ Cerrar</button>`;
+  destroyChart('chartSku');
+  const col=CANAL_C[d.Canal]||bC[d.Marca]||'#378ADD';
+  charts['chartSku']=new Chart(document.getElementById('chartSku'),{type:'bar',
+    data:{labels:['Ene-Abr 2025','Ene-Abr 2026'],datasets:[{data:[Math.round(d[K25()]),Math.round(d[K26()])],backgroundColor:[col+'66',col],borderColor:[col,col],borderWidth:1.5,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:d.Nombre.length>60?d.Nombre.slice(0,60)+'…':d.Nombre,font:{size:12,weight:'500'},color:'#1a1a1a'}},
+      scales:{y:{ticks:{callback:v=>getM()==='Vta'?'$'+Math.round(v/1000)+'k':Math.round(v)}}}}});
+  document.querySelectorAll('.sku-row').forEach(r=>r.classList.toggle('selected',r.dataset.key===key));
+}
+function clearSkuChart(){
+  selectedSku=null;
+  document.getElementById('skuChartWrap').style.display='none';
+  document.getElementById('skuBanner').style.display='none';
+  destroyChart('chartSku');
+  document.querySelectorAll('.sku-row').forEach(r=>r.classList.remove('selected'));
+}
+
+/* ── CATEGORIES ── */
+function getCatData(){
+  const ca=document.getElementById('fCanal').value,an=document.getElementById('fAnimal').value,
+    pv=document.getElementById('fProv').value,mc=document.getElementById('fMarca').value;
+  let d=RAW.filter(r=>(!ca||r.Canal===ca)&&(!an||r.Animal===an)&&(!pv||r.Proveedor===pv)&&(!mc||r.Marca===mc));
+  catPath.forEach(p=>d=d.filter(r=>r[p.level]===p.value));
+  return d;
+}
+function catColor(val){return N1C[catPath.length===0?val:(catPath[0]?.value||val)]||'#888';}
+function renderCatBc(){
+  const lbl=['N1','N2','N3','N4'];
+  let h=`<span class="bc-item${catPath.length===0?' active':''}" onclick="catDrillTo(-1)">Todos</span>`;
+  catPath.forEach((p,i)=>{
+    h+=`<span class="bc-sep">›</span><span class="bc-item${i===catPath.length-1?' active':''}" onclick="catDrillTo(${i})">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${catColor(p.value)};margin-right:4px;vertical-align:middle"></span>${p.value}</span>`;
+  });
+  if(catPath.length<4) h+=`<span class="bc-hint">${lbl[catPath.length]}</span>`;
+  document.getElementById('catBc').innerHTML=h;
+}
+function renderCats(){
+  const data=getCatData();renderCatBc();
+  const curLevel=catPath.length<4?LEVELS[catPath.length]:null;
+  if(!curLevel){
+    // SKU list
+    const rows=[...data].sort((a,b)=>b[K26()]-a[K26()]);
+    const mv=Math.max(...rows.map(d=>d[K26()]),1);
+    const t25=data.reduce((s,d)=>s+d[K25()],0),t26=data.reduce((s,d)=>s+d[K26()],0);
+    // pie by brand
+    const ba={};data.forEach(d=>{if(!ba[d.Marca])ba[d.Marca]=0;ba[d.Marca]+=d[K26()];});
+    makePie('chartCatPie',Object.entries(ba).map(([n,v])=>({name:n,v26:v})),'chartCatPie');
+    const st=catSkuSort;
+    const tbl=document.getElementById('tblCats');
+    tbl.querySelector('thead').innerHTML=`<tr>
+      <th class="sortable${st.col==='sku'?' sort-active':''}" onclick="catSkuSortBy('sku')" style="text-align:left;width:68px">SKU ${si('sku',st)}</th>
+      <th class="sortable${st.col==='nombre'?' sort-active':''}" onclick="catSkuSortBy('nombre')" style="text-align:left">Producto ${si('nombre',st)}</th>
+      <th style="text-align:left">Canal</th>
+      <th class="sortable${st.col==='v25'?' sort-active':''}" onclick="catSkuSortBy('v25')">2025 ${si('v25',st)}</th>
+      <th class="sortable${st.col==='v26'?' sort-active':''}" onclick="catSkuSortBy('v26')">2026 ${si('v26',st)}</th>
+      <th class="sortable${st.col==='diff'?' sort-active':''}" onclick="catSkuSortBy('diff')">Diferencia ${si('diff',st)}</th>
+      <th class="sortable${st.col==='yoy'?' sort-active':''}" onclick="catSkuSortBy('yoy')">YoY% ${si('yoy',st)}</th></tr>`;
+    tbl.querySelector('tbody').innerHTML=skuRows(rows,st,catColor(''),mv)+
+      `<tr class="total-row"><td colspan="3" style="text-align:left">Total</td><td>${fmt(t25)}</td><td>${fmt(t26)}</td><td class="${t26-t25>=0?'pos':'neg'}">${t26-t25>=0?'+':''}${fmt(t26-t25)}</td><td>${pctHtml(pct(t25,t26))}</td></tr>`;
+    return;
+  }
+  const rows=aggBy(data,curLevel);
+  sortRows(rows,catSort);
+  makePie('chartCatPie',rows,'chartCatPie');
+  const maxV=Math.max(...rows.map(r=>r.v26),1);
+  const isLeaf=curLevel==='N4';
+  const lbl2={N1:'Categoría N1',N2:'Subcategoría N2',N3:'Tipo N3',N4:'Detalle N4'}[curLevel];
+  const t25=rows.reduce((s,r)=>s+r.v25,0),t26=rows.reduce((s,r)=>s+r.v26,0);
+  const tbl=document.getElementById('tblCats');
+  tbl.querySelector('thead').innerHTML=`<tr>
+    <th class="sortable${catSort.col==='name'?' sort-active':''}" onclick="catSortBy('name')" style="text-align:left">${lbl2} ${si('name',catSort)}</th>
+    <th class="sortable${catSort.col==='skus'?' sort-active':''}" onclick="catSortBy('skus')">Reg. ${si('skus',catSort)}</th>
+    <th class="sortable${catSort.col==='v25'?' sort-active':''}" onclick="catSortBy('v25')">2025 ${si('v25',catSort)}</th>
+    <th class="sortable${catSort.col==='v26'?' sort-active':''}" onclick="catSortBy('v26')">2026 ${si('v26',catSort)}</th>
+    <th class="sortable${catSort.col==='diff'?' sort-active':''}" onclick="catSortBy('diff')">Diferencia ${si('diff',catSort)}</th>
+    <th class="sortable${catSort.col==='pct'?' sort-active':''}" onclick="catSortBy('pct')">YoY% ${si('pct',catSort)}</th></tr>`;
+  tbl.querySelector('tbody').innerHTML=rows.map(r=>{
+    const col=catColor(r.name);const bw=Math.round(r.v26/maxV*60)+4;
+    return `<tr class="${isLeaf?'':'clickable'}" ${isLeaf?'':` onclick="catDrillDown('${r.name.replace(/'/g,"\\'")}')"` }>
+      <td><div class="row-name"><span class="cat-dot" style="background:${col}"></span><span>${r.name}</span>${isLeaf?'':'<span class="da">›</span>'}</div></td>
+      <td style="color:var(--text3);font-size:11px">${r.skus}</td>
+      <td style="color:var(--text2)">${fmt(r.v25)}</td>
+      <td>${fmt(r.v26)}<div class="bar-track" style="width:${bw}px;display:inline-block"><div class="bar-fill" style="width:100%;background:${col}"></div></div></td>
+      <td class="${r.diff>=0?'pos':'neg'}">${r.diff>=0?'+':''}${fmt(r.diff)}</td>
+      <td>${pctHtml(r.pct)}</td></tr>`;
+  }).join('')+totalTr(2,t25,t26);
+}
+function catSortBy(col){ds(catSort,col);renderCats();}
+function catSkuSortBy(col){ds(catSkuSort,col);renderCats();}
+function catDrillDown(val){catPath.push({level:LEVELS[catPath.length],value:val});catSort={col:'v26',dir:-1};catSkuSort={col:'v26',dir:-1};renderCats();}
+function catDrillTo(idx){catPath=idx===-1?[]:catPath.slice(0,idx+1);catSort={col:'v26',dir:-1};catSkuSort={col:'v26',dir:-1};renderCats();}
+
+/* ── PDF EXPORT ── */
+function exportPDF(){
+  const fm=[['fCanal','Canal'],['fAnimal','Animal'],['fN1','N1'],['fN2','N2'],['fN3','N3'],['fN4','N4'],['fProv','Proveedor'],['fMarca','Marca'],['fMetric','Métrica']];
+  const active=fm.map(([id,lbl])=>{
+    const el=document.getElementById(id);if(!el)return null;
+    const val=el.tagName==='SELECT'?el.options[el.selectedIndex]?.text:el.value;
+    return val&&!['Todos','Todas','Venta ($)'].includes(val)?`${lbl}: ${val}`:null;
+  }).filter(Boolean);
+  const sk=document.getElementById('fSku')?.value;if(sk) active.push('SKU: '+sk);
+  const tns={'brands':'Por marca','prov':'Por proveedor','canal':'Por canal','skus':'Por SKU','cats':'Categorías'};
+  active.unshift('Vista: '+(tns[activeTab]||activeTab));
+  Object.entries({brand:'brandDrillName',prov:'provDrillName',canal:'canalDrillName'}).forEach(([ctx,_])=>{
+    const ds=drillState[ctx];
+    if(activeTab===ctx.replace('brand','brands').replace('prov','prov').replace('canal','canal')&&ds.name)
+      active.push(`${ctx} drill: ${ds.name}${ds.path.length?' › '+ds.path.map(p=>p.value).join(' › '):''}`)
+  });
+  if(activeTab==='cats'&&catPath.length) active.push('Cat: '+catPath.map(p=>p.value).join(' › '));
+  document.getElementById('printFilters').textContent=active.join('  ·  ')||'Ninguno';
+  document.getElementById('printMeta').innerHTML='Exportado: '+new Date().toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'})+'<br>Métrica: '+(document.getElementById('fMetric')?.options[document.getElementById('fMetric')?.selectedIndex]?.text||'');
+  window.print();
+}
+
+/* ── MAIN ── */
+function update(){
+  const data=getFiltered();
+  updateMetrics(data);
+  if(activeTab==='brands'){renderBrands(data);if(drillState.brand.name)renderDrill('brand');}
+  else if(activeTab==='prov'){renderProv(data);if(drillState.prov.name)renderDrill('prov');}
+  else if(activeTab==='canal'){renderCanal(data);if(drillState.canal.name)renderDrill('canal');}
+  else if(activeTab==='skus') renderSkus();
+  else renderCats();
+}
+function showTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['brands','prov','canal','skus','cats'][i]===tab));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  update();
+}
+function resetAll(){
+  // Reset all selects to '' and SKU input to ''
+  FILTER_DEFS.forEach(({id})=>document.getElementById(id).value='');
+  document.getElementById('fMetric').selectedIndex=0;
+  document.getElementById('fSku').value='';
+  window._bAll=false;window._pAll=false;
+  ['brand','prov','canal'].forEach(ctx=>closeDrill(ctx));
+  catPath=[];catSort={col:'v26',dir:-1};catSkuSort={col:'v26',dir:-1};
+  clearSkuChart();skuPage=1;
+  // Rebuild all filters to show full options
+  initFilters();
+  update();
+}
+
+/* ── DEPENDENT FILTERS ── */
+// Order matters: each filter depends on all filters to its left
+const FILTER_DEFS=[
+  {id:'fCanal',  key:'Canal'},
+  {id:'fAnimal', key:'Animal'},
+  {id:'fN1',     key:'N1'},
+  {id:'fN2',     key:'N2'},
+  {id:'fN3',     key:'N3'},
+  {id:'fN4',     key:'N4'},
+  {id:'fProv',   key:'Proveedor'},
+  {id:'fMarca',  key:'Marca'},
+];
+
+// Get current value of a filter select
+function getFVal(id){return document.getElementById(id).value;}
+
+// Returns data filtered by all active filters EXCEPT the ones in `excludeIds`
+function getFilteredExcept(excludeIds=[]){
+  const sk=document.getElementById('fSku').value.trim().toLowerCase();
+  return RAW.filter(d=>{
+    for(const {id,key} of FILTER_DEFS){
+      if(excludeIds.includes(id)) continue;
+      const v=getFVal(id);
+      if(v && d[key]!==v) return false;
+    }
+    return !sk || d.SKU.toLowerCase().includes(sk);
+  });
+}
+
+// Rebuild options for a single select based on valid data
+function rebuildSelect(id, key, validData){
+  const sel=document.getElementById(id);
+  const current=sel.value; // preserve current selection if still valid
+  const options=[...new Set(validData.map(d=>d[key]))]
+    .filter(v=>v&&v!=='nan'&&v!=='None'&&v!=='-No Value-'||v==='-No Value-'&&validData.some(d=>d[key]===v))
+    .sort();
+  sel.innerHTML='';
+  const placeholder=id==='fMarca'?'Todas':'Todos';
+  sel.add(new Option(placeholder,''));
+  options.forEach(v=>sel.add(new Option(v,v)));
+  // Restore selection if still valid, otherwise reset to ''
+  sel.value=options.includes(current)?current:'';
+}
+
+// Rebuild ALL dependent filters based on current selections
+function updateFilters(){
+  for(const {id,key} of FILTER_DEFS){
+    // Valid options = data filtered by everything EXCEPT this filter itself
+    const validData=getFilteredExcept([id]);
+    rebuildSelect(id, key, validData);
+  }
+}
+
+// On any filter change: update dependent options, then re-render dashboard
+function onFilterChange(){
+  updateFilters();
+  update();
+}
+
+// Initial population: show all options
+function initFilters(){
+  for(const {id,key} of FILTER_DEFS){
+    rebuildSelect(id, key, RAW);
+  }
+}
+
+document.querySelectorAll('select').forEach(s=>s.addEventListener('change', onFilterChange));
+document.getElementById('fSku').addEventListener('input', ()=>{updateFilters();update();});
+
+initFilters();
+update();
+// Set subtitle with record count and date range
+(function(){
+  const sub = document.getElementById('dashSubtitle');
+  const psub = document.getElementById('printSubtitle');
+  const msg = `Ene–Abr 2025 vs 2026 · ${RAW.length.toLocaleString('es-CO')} registros · Última actualización: /*__UPDATED_AT__*/`;
+  if(sub) sub.textContent = msg;
+  if(psub) psub.textContent = msg;
+})();
+</script>
+</body>
+</html>
