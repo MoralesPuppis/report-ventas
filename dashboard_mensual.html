@@ -1,10 +1,4 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-  </head>
-  <body>
-    <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -505,7 +499,7 @@ function updateMetrics(data){
   const t25=data.reduce((s,d)=>s+getVal25(d),0),t26=data.reduce((s,d)=>s+getVal26(d),0);
   const p=pct(t25,t26),ps=p===null?'—':p===999?'Nuevo':(p>=0?'+':'')+p.toFixed(1)+'%';
   const mes=getActiveMes();
-  const mesLabel=mes?(MONTHS.find(m=>m.key===mes)?.label||mes):'Ene–Abr';
+  const firstM=MONTHS[0]?.label||'Ene';const lastM=MONTHS[MONTHS.length-1]?.label||'';const mesLabel=mes?(MONTHS.find(m=>m.key===mes)?.label||mes):(firstM+'–'+lastM);
   document.getElementById('metricsRow').innerHTML=`
     <div class="mc"><div class="mc-label">${mesLabel} 2025</div><div class="mc-val">${fmt(t25)}</div><div class="mc-sub">${data.filter(d=>getVal25(d)>0).length} registros activos</div></div>
     <div class="mc"><div class="mc-label">${mesLabel} 2026</div><div class="mc-val">${fmt(t26)}</div><div class="mc-sub">${data.filter(d=>getVal26(d)>0).length} registros activos</div></div>
@@ -1033,7 +1027,4 @@ update();
 })();
 </script>
 </body>
-</html>
-
-  </body>
 </html>
